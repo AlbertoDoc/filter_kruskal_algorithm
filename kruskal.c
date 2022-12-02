@@ -9,51 +9,50 @@ typedef struct EDGE
 } Edge;
 
 void printMST(Edge *T, int n) {
-	int cost = 0;
+    int cost = 0;
 
-	printf("Arestas selecionadas para compor a MST:\nu  v  w\n");
-	for (int i = 0; i < n; i++) {
-		printf("%d  %d  %d\n", T[i].u, T[i].v, T[i].weight);
-		cost += T[i].weight;
-	}
+    printf("Arestas selecionadas para compor a MST:\nu  v  w\n");
+    for (int i = 0; i < n; i++) {
+    	printf("%d  %d  %d\n", T[i].u, T[i].v, T[i].weight);
+    	cost += T[i].weight;
+    }
 
-	printf("\nCusto = %d", cost);
+    printf("\nCusto = %d", cost);
 }
 
 void swap(Edge *x, Edge *y) {
-	Edge temp;
-	temp = *x;
-	*x = *y;
-	*y = temp;
+    Edge temp;
+    temp = *x;
+    *x = *y;
+    *y = temp;
 }
 
 int partition(Edge *edges, int begin, int end){
-	
     int p = begin, pivot=edges[end].weight;
 	
     for (int i = begin; i < end; i++) {
-		if (edges[i].weight <= pivot) {
-			swap(&edges[i], &edges[p]);
-			p++;
-		}
-	}
+    	if (edges[i].weight <= pivot) {
+    		swap(&edges[i], &edges[p]);
+    		p++;
+    	}
+    }
 
-	swap(&edges[end], &edges[p]);
+    swap(&edges[end], &edges[p]);
 
-	return p;
+    return p;
 }
 
 void quickSort(Edge *edges, int begin, int end) {
-	int q;
+    int q;
 
-	if (begin >= end) {
-		return;
+    if (begin >= end) {
+    	return;
     }
 
-	q = partition(edges, begin, end);
+    q = partition(edges, begin, end);
 	
     quickSort(edges, begin, q-1);
-	quickSort(edges, q + 1, end);
+    quickSort(edges, q + 1, end);
 }
 
 void kruskal(Edge *edges, int* vertex, int n, int m) {
