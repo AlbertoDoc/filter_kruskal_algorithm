@@ -55,13 +55,68 @@ void quickSort(Edge *edges, int begin, int end) {
     quickSort(edges, q + 1, end);
 }
 
-void kruskal(Edge *edges, int* vertex, int n, int m) {
+int find(int u, int n, int parent[]) {
+	int i = 0, A[n];
+	
+    while(u != parent[u]) {
+		A[i] = u;
+		u = parent[u];
+		i++;
+	}
+
+	i--;
+	
+    while(i >= 0) {
+		parent[A[i]] = u;
+		i--;
+	}
+
+	return u;
+}
+
+void unionByRank(int u, int v, int n, int parent[], int rank[]) {
+	int x, y;
+	x = find(u, n, parent);
+	y = find(v, n, parent);
+	
+    if (rank[x] < rank[y]) {
+		parent[x] = y;        
+    } else if (rank[y] < rank[x]) {
+		parent[y] = x;
+    } else {
+		parent[x] = y;
+		rank[y]++;
+	}
+}
+
+void kruskal(Edge *edges, int n, int m, int parent[], int rank[]) {
     Edge* tree;
     tree = (Edge*) malloc((n-1) * sizeof(Edge)); // by definition a tree must have n-1 edges
 
     quickSort(edges, 0, m-1); // Sorting edges by weight
 
     //printMST(edges, m); // only for testing if quicksort is working
+
+    int includedVertexCount = 0, x, y;
+    for (int i = 0; i < m; i++) {
+        Edge edge = edges[i];
+
+        if (includedVertexCount == n - 1) {
+            // The tree is already with the maximum edges
+            break;
+        }
+        
+        x = find(edge.u, n, parent);
+        y = find(edge.v, n, parent);
+
+        if (x != y) {
+            tree[includedVertexCount] = edge;
+            unionByRank(x, y, n, parent, rank);
+            includedVertexCount++;
+        }
+    }
+
+    printMST(tree, n - 1);
 }
 
 int main() {
@@ -75,12 +130,15 @@ int main() {
     printf("Insira a quantidade de arestas do grafo: ");
     scanf("%d", &m);
 
+    int parent[n + 1], rank[n + 1];
+
     int* vertex = (int*) malloc(n * sizeof(int));
     edges = (Edge*) malloc(m * sizeof(Edge));
 
     // giving for each vertex a identification
     for (int i = 1; i < n + 1; i++) {
-        vertex[i] = i;
+        parent[i] = i;
+        rank[i] = 0;
     }
 
     for (int i = 0; i < m; i++) {
@@ -92,5 +150,5 @@ int main() {
         edges[i].weight = weight;
     }
 
-    kruskal(edges, vertex, n, m);
+    kruskal(edges, n, m, parent, rank);
 }
