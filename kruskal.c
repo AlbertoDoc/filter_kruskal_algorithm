@@ -11,13 +11,13 @@ typedef struct EDGE
 void printMST(Edge *T, int n) {
     int cost = 0;
 
-    printf("Arestas selecionadas para compor a MST:\nu  v  w\n");
+    printf("\nArestas selecionadas para compor a MST:\nu  v  w\n");
     for (int i = 0; i < n; i++) {
     	printf("%d  %d  %d\n", T[i].u, T[i].v, T[i].weight);
     	cost += T[i].weight;
     }
 
-    printf("\nCusto = %d", cost);
+    printf("\nCusto = %d\n", cost);
 }
 
 void swap(Edge *x, Edge *y) {
@@ -114,6 +114,8 @@ void kruskal(Edge *edges, int n, int m, int parent[], int rank[]) {
         // if x != y is true so, edge.u and edge.v is not in the same set
         if (x != y) {
             tree[includedVertexCount] = edge;
+
+            // Using unionByRank to make the union of two vertex
             unionByRank(x, y, n, parent, rank);
             includedVertexCount++;
         }
