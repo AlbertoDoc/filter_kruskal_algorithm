@@ -106,9 +106,12 @@ void kruskal(Edge *edges, int n, int m, int parent[], int rank[]) {
             break;
         }
         
+        // The find method uses the absolute root to determine whether two vertices belong to the same set.
         x = find(edge.u, n, parent);
         y = find(edge.v, n, parent);
 
+        // We compare the two absolut root's to determine if they are in the same set
+        // if x != y is true so, edge.u and edge.v is not in the same set
         if (x != y) {
             tree[includedVertexCount] = edge;
             unionByRank(x, y, n, parent, rank);
