@@ -2,6 +2,7 @@
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include<time.h>
 
 
 void printMST(int parent[], int numberOfVertex, int graph[numberOfVertex][numberOfVertex])
@@ -72,6 +73,11 @@ int main() {
             scanf("%d", &graph[i][j]);
         }
     }
-
+    clock_t start, end;
+    start = clock();
     prim(numberOfVertex, graph, weightKeys, mstSet, parent);
+    end = clock();
+    double duration = ((double)end - start)/CLOCKS_PER_SEC;
+
+    printf("Tempo de execucao do algoritmo em segundos: %f\n", duration);
 }

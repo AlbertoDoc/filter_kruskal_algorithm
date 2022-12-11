@@ -1,5 +1,7 @@
 #include<stdlib.h>
 #include<stdio.h>
+#include<time.h>
+
 
 typedef struct EDGE
 {
@@ -154,6 +156,11 @@ int main() {
         edges[i].v = v;
         edges[i].weight = weight;
     }
-
+    clock_t start, end;
+    start = clock();
     kruskal(edges, n, m, parent, rank);
+    end = clock();
+    double duration = ((double)end - start)/CLOCKS_PER_SEC;
+
+    printf("Tempo de execucao do algoritmo em segundos: %f\n", duration);
 }
