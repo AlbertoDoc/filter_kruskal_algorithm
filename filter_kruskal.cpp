@@ -1,6 +1,16 @@
-#include<stdlib.h>
-#include<stdio.h>
-#include<math.h>
+#include <iostream>
+#include <vector>
+#include <cmath>
+#include <set>
+#include <ctime>
+#include <random>
+#include <chrono>
+#include <algorithm>
+
+using namespace std;
+
+mt19937 rng(chrono::steady_clock::now().time_since_epoch().count());
+
 
 typedef struct EDGE
 {
@@ -9,12 +19,24 @@ typedef struct EDGE
     int weight;
 } Edge;
 
-void printMST(Edge *T, int n) {
+bool cmp(Edge u, Edge v) { 
+    return u.weight < v.weight;
+}
+
+int compare(const void *a, const void *b) {
+  
+    Edge *edgeA = (Edge *)a;
+    Edge *edgeB = (Edge *)b;
+  
+    return (edgeB->weight < edgeA->weight);
+}
+
+void printMST(vector<Edge> T) {
     int cost = 0;
 
     printf("\nArestas selecionadas para compor a MST:\nu  v  w\n");
-    for (int i = 0; i < n; i++) {
-    	printf("%d  %d  %d\n", T[i].u, T[i].v, T[i].weight);
+    for (int i = 0; i < T.size(); i++) {
+    	cout << T[i].u << " " << T[i].v << " " << T[i].weight << endl;
     	cost += T[i].weight;
     }
 
@@ -28,7 +50,7 @@ void swap(Edge *x, Edge *y) {
     *y = temp;
 }
 
-int partition(Edge *edges, int begin, int end){
+int partition(vector<Edge> &edges, int begin, int end){
     int p = begin, pivot=edges[end].weight;
 	
     for (int i = begin; i < end; i++) {
@@ -43,7 +65,7 @@ int partition(Edge *edges, int begin, int end){
     return p;
 }
 
-void quickSort(Edge *edges, int begin, int end) {
+void quickSort(vector<Edge> &edges, int begin, int end) {
     int q;
 
     if (begin >= end) {
@@ -90,19 +112,14 @@ void unionByRank(int u, int v, int n, int parent[], int rank[]) {
 	}
 }
 
-Edge* kruskal(Edge *edges, int n, int m, int parent[], int rank[]) {
-    Edge* tree;
-    tree = (Edge*) malloc((n-1) * sizeof(Edge)); // by definition a tree must have n-1 edges
+void kruskal(vector<Edge> &edges, int n, int m, int parent[], int rank[], vector<Edge> &tree) {
+    quickSort(edges, 0, m-1);
 
-    quickSort(edges, 0, m-1); // Sorting edges by weight
-
-    //printMST(edges, m); // only for testing if quicksort is working
-
-    int includedVertexCount = 0, x, y;
+    int x, y;
     for (int i = 0; i < m; i++) {
         Edge edge = edges[i];
 
-        if (includedVertexCount == n - 1) {
+        if (tree.size() == n - 1) {
             // The tree is already with the maximum edges
             break;
         }
@@ -114,18 +131,15 @@ Edge* kruskal(Edge *edges, int n, int m, int parent[], int rank[]) {
         // We compare the two absolut root's to determine if they are in the same set
         // if x != y is true so, edge.u and edge.v is not in the same set
         if (x != y) {
-            tree[includedVertexCount] = edge;
+            tree.push_back(edge);
 
             // Using unionByRank to make the union of two vertex
             unionByRank(x, y, n, parent, rank);
-            includedVertexCount++;
         }
     }
-
-    return tree;
 }
 
-int kruskalThreshold(Edge* edges, int n, int m, int treeSize) {
+int kruskalThreshold(vector<Edge> &edges, int n, int m) {
     if (m == 0) return 1;
 
     int comparativeValue = edges[0].weight;
@@ -134,44 +148,67 @@ int kruskalThreshold(Edge* edges, int n, int m, int treeSize) {
             return n * log(n) / 2;
         }
     }
+
     return m + 1;
 }
 
-Edge pickPivot(Edge* edges, int m) {
+vector<Edge> vectorRand(vector<Edge> &vet) {
+    int k = vet.size();
+    int x = rng() % k;
 
+    vector<Edge> ans;
+    set<int> used;
+
+    for (int i = 0; i * i < k; i++) {
+        while (used.count(x)) {
+            x = rng() % k;
+        }
+
+        used.insert(x);
+        ans.push_back(vet[x]);
+    }
+
+    return ans;
 }
 
-Edge* filter(Edge* edges, int m, int n, int parent[], Edge* tree, int treeSize) {
-    Edge* filteredEdges = (Edge*) malloc(m * sizeof(Edge));
+Edge pickPivot(vector<Edge> &edges) {
+    vector<Edge> median = vectorRand(edges);
+    sort(median.begin(), median.end(), cmp);
+
+    return median[(median.size() - 1) / 2];
+}
+
+vector<Edge> filter(vector<Edge> &edges, int m, int n, int parent[], vector<Edge> &tree) {
+    vector<Edge> filteredEdges;
 
     for (int i = 0; i < m; i++) {
         if (find(edges[i].u, n, parent) != find(edges[i].v, n, parent)) {
-            filteredEdges[i] = edges[i];
+            filteredEdges.push_back(edges[i]);
         }
     }
 
     return filteredEdges;
 }
 
-void filterKruskal(int n, int m, Edge* edges, Edge* tree, int treeSize, int parent[], int rank[]) {
-    Edge* finalTree;
-    if (m <= kruskalThreshold(edges, n, m, treeSize)) {
+void filterKruskal(int n, int m, vector<Edge> &edges, vector<Edge> &tree, int parent[], int rank[]) {
+    if (m <= kruskalThreshold(edges, n, m)) {
         // runs kruskal algorithm for edge size below the threshold
-        finalTree = kruskal(edges, n, m, parent, rank);
+        kruskal(edges, n, m, parent, rank, tree);
     } else {
-        Edge pivot = pickPivot(edges, m);
-        Edge* lowestEdges;
-        Edge* biggestEdges;
+        Edge pivot = pickPivot(edges);
+        vector<Edge> lowestEdges;
+        vector<Edge> biggestEdges;
 
         for (int i = 0; i < m; i++) {
             if (edges[i].weight <= pivot.weight) {
-                /* code */
+                lowestEdges.push_back(edges[i]);
             } else {
-
+                biggestEdges.push_back(edges[i]);
             }
-            filterKruskal(n, m, lowestEdges, tree, treeSize, parent, rank);
-            biggestEdges = filter(edges, m, n, parent, tree, treeSize);
-            filterKruskal(n, m, edges, tree, treeSize, parent, rank);
+
+            filterKruskal(n, lowestEdges.size(), lowestEdges, tree, parent, rank);
+            biggestEdges = filter(edges, m, n, parent, tree);
+            filterKruskal(n, biggestEdges.size(), biggestEdges, tree, parent, rank);
         }
     }
 }
@@ -179,7 +216,7 @@ void filterKruskal(int n, int m, Edge* edges, Edge* tree, int treeSize, int pare
 int main() {
     int n, m;  // number of vertex and edges in graph
     int u, v, weight; // vertex u and v, weight of edge
-    Edge *edges;
+    vector<Edge> edges;
 
     printf("Insira a quantidade de vertices do grafo: ");
     scanf("%d", &n);
@@ -190,7 +227,6 @@ int main() {
     int parent[n + 1], rank[n + 1];
 
     int* vertex = (int*) malloc(n * sizeof(int));
-    edges = (Edge*) malloc(m * sizeof(Edge));
 
     // giving for each vertex a identification
     for (int i = 1; i < n + 1; i++) {
@@ -202,10 +238,25 @@ int main() {
         printf("\nInsira uma aresta na forma u, v, peso:\n");
         scanf("%d %d %d", &u, &v, &weight);
 
-        edges[i].u = u;
-        edges[i].v = v;
-        edges[i].weight = weight;
+        Edge edge;
+
+        edge.u = u;
+        edge.v = v;
+        edge.weight = weight;
+        edges.push_back(edge);
     }
 
-    kruskal(edges, n, m, parent, rank);
+    quickSort(edges, 0, m-1);
+
+    vector<Edge> tree;
+    clock_t start, end;
+    start = clock();
+    filterKruskal(n, m, edges, tree, parent, rank);
+    end = clock();
+
+    printMST(tree);
+
+    double duration = ((double)end - start)/CLOCKS_PER_SEC;
+
+    printf("Tempo de execucao do algoritmo em segundos: %f\n", duration);
 }
